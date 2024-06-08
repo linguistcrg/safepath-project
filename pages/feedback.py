@@ -12,9 +12,6 @@ st.markdown(
     """
 )
 
-st.write("## We value your feedback!")
-st.write("Please rate your experience on the following aspects and leave a review below.")
-
 # Rating input
 
 safety_rating = st_star_rating(label="Feeling of safety", maxValue=5, defaultValue=3, key="easiness_rating", emoticons=True)
