@@ -1,36 +1,26 @@
 import streamlit as st
 from streamlit_star_rating import st_star_rating
 
-st.set_page_config(
-    page_title="Hello",
-    page_icon="👋",
-)
+st.set_page_config(page_title="Feedback")
 
-st.write("# Welcome to Feedback! 👋")
+st.write("# We value your feedback!")
 
 st.markdown(
     """
-    Streamlit is an open-source app framework built specifically for
-    Machine Learning and Data Science projects.
-    **👈 Select a demo from the sidebar** to see some examples
-    of what Streamlit can do!
-    ### Want to learn more?
-    - Check out [streamlit.io](https://streamlit.io)
-    - Jump into our [documentation](https://docs.streamlit.io)
-    - Ask a question in our [community
-        forums](https://discuss.streamlit.io)
-    ### See more complex demos
-    - Use a neural net to [analyze the Udacity Self-driving Car Image
-        Dataset](https://github.com/streamlit/demo-self-driving)
-    - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
-"""
+    Please help us improve SafePath by rating your experience with your suggested route.
+    You can rate different aspects of your route from 1 to 5 stars and leave a review below:
+    """
 )
 
 st.write("## We value your feedback!")
-st.write("Please rate your experience and leave a review below.")
+st.write("Please rate your experience on the following aspects and leave a review below.")
 
-# Rating input using star rating
-rating = st_star_rating("Rate your path from 1 to 5 stars:", maxValue=5, defaultValue=1, key="rating")
+# Rating input
+
+safety_rating = st_star_rating(label="Feeling of safety", maxValue=5, defaultValue=3, key="easiness_rating", emoticons=True)
+lighting_rating = st_star_rating(label="Number of street lights", maxValue=5, defaultValue=3, key="lighting_rating", emoticons=True)
+speed_rating = st_star_rating(label="Travel time", maxValue=5, defaultValue=3, key="speed_rating", emoticons=True)
+overall_rating = st_star_rating(label="Overall experience", maxValue=5, defaultValue=3, key="overall_rating", emoticons=True)
 
 # Review input
 review = st.text_area("Write your review here:")
@@ -38,5 +28,8 @@ review = st.text_area("Write your review here:")
 # Display submitted feedback
 if st.button("Submit"):
     st.write("Thank you for your feedback!")
-    st.write(f"Rating: {'⭐' * rating}")
+    st.write(f"Feeling of safety: {safety_rating}")
+    st.write(f"Number of street lights: {lighting_rating}")
+    st.write(f"Travel time: {speed_rating}")
+    st.write(f"Overall experience: {overall_rating}")
     st.write(f"Review: {review}")
