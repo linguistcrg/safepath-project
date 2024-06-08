@@ -1,8 +1,5 @@
 <<<<<<< HEAD:main.py
 from ast import main
-import os
-=======
->>>>>>> fe9d2e9272447cdf985b0c6b41bd3737e21d4911:routing.py
 import streamlit as st
 import duckdb
 import folium
@@ -38,11 +35,6 @@ with col2:
 if 'clicked_points' not in st.session_state:
     st.session_state.clicked_points = []
 
-<<<<<<< HEAD:main.py
-st.sidebar.success("The calculator of the safest routes  in Amsterdam for women")
-=======
-
->>>>>>> fe9d2e9272447cdf985b0c6b41bd3737e21d4911:routing.py
 m = folium.Map(location=[52.3676, 4.9041], zoom_start=12)
 Geocoder().add_to(m)
 
@@ -97,3 +89,5 @@ if st.session_state.clicked_points:
         st.write(f"Latitude point 2: {point2['lat']}, Longitude point 2: {point2['lng']}")
 conn.close()
 
+
+st.button("Give a feedback")
