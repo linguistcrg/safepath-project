@@ -7,8 +7,8 @@ st.write("# We value your feedback!")
 
 st.markdown(
     """
-    Please help us improve SafePath by rating your experience with your suggested route.
-    You can rate different aspects of your route from 1 to 5 stars and leave a review below:
+    Please help us improve SafePath by sharing your experience with your suggested route.
+    You can rate different aspects of your route and leave a review below:
     """
 )
 
