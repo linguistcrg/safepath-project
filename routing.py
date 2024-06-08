@@ -1,5 +1,4 @@
-<<<<<<< HEAD:main.py
-from ast import main
+
 import streamlit as st
 import duckdb
 import folium
@@ -34,6 +33,7 @@ with col2:
     user_input2 = st.text_input("End point:")
 if 'clicked_points' not in st.session_state:
     st.session_state.clicked_points = []
+
 
 m = folium.Map(location=[52.3676, 4.9041], zoom_start=12)
 Geocoder().add_to(m)
