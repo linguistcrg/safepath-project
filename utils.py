@@ -24,6 +24,13 @@ def load_from_url(conn):
             CREATE TABLE ams_walk_edges AS SELECT * FROM st_read('https://blobs.duckdb.org/ams_walk_edges.geojson');
         """)
 
+        # insert_swapped_edges_query = """
+        #     INSERT INTO ams_walk_edges (v, u, key, highway, name, bridge, tunnel, geom, length)
+        #     SELECT u, v, key, highway, name, bridge, tunnel, geom, length
+        #     FROM ams_walk_edges;
+        # """
+        # conn.execute(insert_swapped_edges_query)
+
     nodes = conn.execute("""
     SELECT id, 
            ST_X(geom) AS longitude, 
@@ -47,9 +54,9 @@ def shortest_path(conn, source_node, destination_node):
             ams_walk_edges
         WHERE
             u = {source_node} -- Replace with the source node ID
-    
+
         UNION ALL
-    
+
         -- Recursive step: Expand the path
         SELECT
             ams_walk_edges.v AS node_id,
@@ -72,8 +79,25 @@ def shortest_path(conn, source_node, destination_node):
     ORDER BY
         distance;
     """
-
     path = conn.execute(shortest_path_query).fetchone()
     if path is not None:
         return [int(x) for x in path[0].split("->")], path[1]
+    return None
+
+
+def find_closest_point(conn, longitude, latitude):
+    query = f"""
+        SELECT id, 
+        ST_X(geom) AS longitude, 
+        ST_Y(geom) AS latitude
+        FROM ams_walk_nodes
+        ORDER BY ST_Distance(
+            geom,
+            ST_Point({longitude}, {latitude})
+        );
+    """
+
+    point = conn.execute(query).fetchone()
+    if point is not None:
+        return point
     return None

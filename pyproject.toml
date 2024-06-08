@@ -11,6 +11,7 @@ duckdb = "^1.0.0"
 streamlit = "^1.35.0"
 streamlit-folium = "^0.20.0"
 st-star-rating = "^0.0.6"
+geopy = "^2.4.1"
 
 
 [build-system]
