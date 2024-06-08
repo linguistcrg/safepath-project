@@ -1,6 +1,9 @@
 import os
 import streamlit as st
 import duckdb
+import folium
+
+from streamlit_folium import st_folium
 
 from loaders import load_from_url, load_local
 
@@ -10,7 +13,7 @@ conn = duckdb.connect()
 cursor = conn.cursor()
 
 if os.path.exists("data/nodes.csv"):
-    nodes, edges = load_local()
+    nodes, edges = load_local(conn)
 else:
     nodes, edges = load_from_url(conn)
 
@@ -40,3 +43,15 @@ st.markdown(
     - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
 """
 )
+
+m = folium.Map(location=[52.3676, 4.9041], zoom_start=12)
+
+
+for row in nodes:
+    folium.Marker(
+        location=[row[1], row[2]],  # Adjust based on your CSV structure
+        popup=row[0]  # Adjust based on your CSV structure
+    ).add_to(m)
+
+# Display the map in Streamlit
+st_folium(m, width=700, height=500)

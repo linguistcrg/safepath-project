@@ -25,7 +25,13 @@ def load_from_url(conn):
     return nodes_df, edges_df
 
 
-def load_local():
-    nodes = duckdb.from_csv_auto("data/nodes.csv")
-    edges = duckdb.from_csv_auto("data/edges.csv")
+def load_local(conn):
+    conn.execute(f"""
+        CREATE TABLE nodes AS 
+        SELECT * FROM read_csv_auto('data/nodes.csv');
+        CREATE TABLE edges AS 
+        SELECT * FROM read_csv_auto('data/edges.csv');
+    """)
+    nodes = conn.execute("SELECT * FROM nodes").fetchall()
+    edges = conn.execute("SELECT * FROM edges").fetchall()
     return nodes, edges
