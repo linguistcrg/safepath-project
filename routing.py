@@ -19,7 +19,6 @@ st.set_page_config(
     page_icon="👋",
 )
 
-
 st.write("# Welcome to SafePath!")
 st.write("The calculator of the safest routes  in Amsterdam for women")
 
@@ -43,34 +42,7 @@ with col2:
         location = geolocator.geocode(user_input2)
         destination = find_closest_point(conn, location.longitude, location.latitude)
 
-if 'clicked_points' not in st.session_state:
-    st.session_state.clicked_points = []
-
-    # Display the map in Streamlit
-m.add_child(folium.LatLngPopup())
-
-map_data = st_folium(m, height=500, width=500)
-if map_data['last_clicked'] is not None:
-    lat = map_data['last_clicked']['lat']
-    lng = map_data['last_clicked']['lng']
-    new_point = {'lat': lat, 'lng': lng}
-
-    # Append new point to the session state
-    if new_point not in st.session_state.clicked_points:
-        st.session_state.clicked_points.append(new_point)
-
-# Display the clicked points
-if st.session_state.clicked_points:
-    if len(st.session_state.clicked_points) >= 2:
-        st.write("Clicked points:")
-        point1=st.session_state.clicked_points[0]
-        point2=st.session_state.clicked_points[1]
-        print(point1)
-        print(point2)
-        st.write(f"Latitude point 1: {point1['lat']}, Longitude point 1: {point1['lng']}")
-        st.write(f"Latitude point 2: {point2['lat']}, Longitude point 2: {point2['lng']}")
-
-
+print(source, destination)
 if source is not None and destination is not None:
     folium.Marker(
         location=[source[2], source[1]],
@@ -87,6 +59,10 @@ if source is not None and destination is not None:
     ).add_to(m)
 
     path = shortest_path(conn, source[0], destination[0])
+    with col1:
+        st.write("")
+    with col2:
+        st.write("")
 
     if path is not None:
         path_nodes, _ = path
