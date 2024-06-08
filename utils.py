@@ -54,7 +54,7 @@ def shortest_path(conn, source_node, destination_node):
         SELECT
             ams_walk_edges.v AS node_id,
             ShortestPath.path || '->' || CAST(ams_walk_edges.v AS VARCHAR) AS path,
-            ShortestPath.distance + 1 AS distance
+            ShortestPath.distance + ams_walk_edges.length AS distance
         FROM
             ShortestPath
         JOIN
