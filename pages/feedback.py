@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_star_rating import st_star_rating
 
 st.set_page_config(
     page_title="Hello",
@@ -24,3 +25,18 @@ st.markdown(
     - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
 """
 )
+
+st.write("## We value your feedback!")
+st.write("Please rate your experience and leave a review below.")
+
+# Rating input using star rating
+rating = st_star_rating("Rate your path from 1 to 5 stars:", maxValue=5, defaultValue=1, key="rating")
+
+# Review input
+review = st.text_area("Write your review here:")
+
+# Display submitted feedback
+if st.button("Submit"):
+    st.write("Thank you for your feedback!")
+    st.write(f"Rating: {'⭐' * rating}")
+    st.write(f"Review: {review}")
