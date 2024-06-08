@@ -1,13 +1,10 @@
+# Import packages
 import streamlit as st
 from streamlit_star_rating import st_star_rating
 
-
-   
-
+# Write page title and message
 st.set_page_config(page_title="Feedback")
-
 st.write("# We value your feedback!")
-
 st.markdown(
     """
     Please help us improve SafePath by sharing your experience with your suggested route.
@@ -16,7 +13,6 @@ st.markdown(
 )
 
 # Rating input
-
 safety_rating = st_star_rating(label="Feeling of safety", maxValue=5, defaultValue=3, key="easiness_rating", emoticons=True)
 lighting_rating = st_star_rating(label="Number of street lights", maxValue=5, defaultValue=3, key="lighting_rating", emoticons=True)
 speed_rating = st_star_rating(label="Travel time", maxValue=5, defaultValue=3, key="speed_rating", emoticons=True)
@@ -33,4 +29,3 @@ if st.button("Submit"):
     st.write(f"Travel time: {speed_rating}")
     st.write(f"Overall experience: {overall_rating}")
     st.write(f"Review: {review}")
-

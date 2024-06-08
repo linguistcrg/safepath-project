@@ -1,3 +1,4 @@
+# Import packages
 import streamlit as st
 import duckdb
 import folium
@@ -8,34 +9,41 @@ from streamlit_folium import st_folium
 
 from utils import load_from_url, shortest_path, find_closest_point
 
+# Connect to DuckDB database
 conn = duckdb.connect(database='data.duckdb')
 
+# Create a cursor object
 cursor = conn.cursor()
 
+# Load nodes and edges from the database
 nodes, edges = load_from_url(conn)
 
-st.set_page_config(
-    page_title="Hello",
-    page_icon="👋",
-)
+# Set the page configuration for the Streamlit app
+st.set_page_config(page_title="SafePath")
 
+# Display the title and description
 st.write("# Welcome to SafePath!")
-st.write("The calculator of the safest routes  in Amsterdam for women")
+st.write("The calculator of the safest routes for women in Amsterdam.")
 
+# Create two columns for user input
 col1, col2 = st.columns(2)
 
+# Initialise the Amsterdam map
 m = folium.Map(location=[52.3676, 4.9041], zoom_start=12)
 Geocoder().add_to(m)
 geolocator = Nominatim(user_agent="SafePath")
 
+# Initialise source and destination variables
 source, destination = None, None
 
+# User input for the starting point
 with col1:
     user_input1 = st.text_input("Starting point:")
     if user_input1:
         location = geolocator.geocode(user_input1)
         source = find_closest_point(conn, location.longitude, location.latitude)
 
+# User input for the end point
 with col2:
     user_input2 = st.text_input("End point:")
     if user_input2:
@@ -58,6 +66,7 @@ if source is not None and destination is not None:
         color="green"
     ).add_to(m)
 
+    # Calculate the shortest path between source and destination
     path = shortest_path(conn, source[0], destination[0])
     with col1:
         st.write("")
@@ -88,7 +97,8 @@ if source is not None and destination is not None:
                 color="blue"
             ).add_to(m)
 
-        # Display the map in Streamlit
+# Display the map in Streamlit
 st_folium(m, width=700, height=500)
 
+# Close the database connection
 conn.close()
