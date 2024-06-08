@@ -20,6 +20,8 @@ st.set_page_config(
     page_icon="👋",
 )
 
+
+
 st.write("# Welcome to SafePath!")
 st.write("The calculator of the safest routes  in Amsterdam for women")
 
@@ -90,5 +92,17 @@ if st.session_state.clicked_points:
 conn.close()
 
 
-st.button("Give a feedback")
+# if st.button("Submit"):
+#         # Set query parameter to indicate navigation to feedback page
+#         st.experimental_set_query_params(page="feedback")
+#         # Rerun the app to navigate to the feedback page
+#         st.experimental_rerun()
 
+
+app_path = 'http://localhost:8501'
+page_file_path = 'pages/feedback.py'
+page = page_file_path.split('/')[1][0:-3]  # get "page1"
+st.markdown(
+    f'''<a href="{app_path}/{page}" target="_self">Give a feedback</a>''',
+    unsafe_allow_html=True
+)
