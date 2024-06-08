@@ -7,8 +7,7 @@ import folium
 
 from streamlit_folium import st_folium
 
-from loaders import load_from_url
-
+from utils import load_from_url, shortest_path
 
 conn = duckdb.connect(database='data.duckdb')
 
@@ -16,12 +15,10 @@ cursor = conn.cursor()
 
 nodes, edges = load_from_url(conn)
 
-conn.close()
-
-# st.set_page_config(
-#     page_title="Hello",
-#     page_icon="👋",
-# )
+st.set_page_config(
+    page_title="Hello",
+    page_icon="👋",
+)
 
 st.write("# Welcome to SafePath!")
 st.write("The calculator of the safest routes  in Amsterdam for women")
@@ -37,28 +34,33 @@ with col2:
 
 st.sidebar.success("The calculator of the safest routes  in Amsterdam for women")
 m = folium.Map(location=[52.3676, 4.9041], zoom_start=12)
+path = shortest_path(conn, nodes[0][0], 4859)
 
+if path is not None:
+    path_nodes, _ = path
+    nodes_query = (f"SELECT id, ST_X(geom) AS longitude, ST_Y(geom) AS latitude FROM ams_walk_nodes WHERE id IN "
+                   f"({','.join(map(str, path_nodes))})")
+    nodes_data = conn.execute(nodes_query).fetchall()
 
-for row in nodes[:10]:
-    folium.Marker(
-        location=[row[2], row[1]],
-        popup=row[0]
-    ).add_to(m)
+    # Add nodes as markers
+    for node in nodes_data:
+        folium.Marker(
+            location=[node[2], node[1]],
+            popup=f"Node {node[0]}",
+            tooltip=f"Node {node[0]}"
+        ).add_to(m)
 
-# Display the map in Streamlit
-st_folium(m, width=700, height=500)
+    # Add edges as polylines
+    for i in range(len(nodes_data) - 1):
+        folium.PolyLine(
+            locations=[
+                [nodes_data[i][2], nodes_data[i][1]],
+                [nodes_data[i + 1][2], nodes_data[i + 1][1]]
+            ],
+            color="blue"
+        ).add_to(m)
 
- # Button to navigate to Routing Page
-if st.button("Submit"):
-        st.experimental_set_query_params(page="routing")
-        st.experimental_rerun()
+    # Display the map in Streamlit
+    st_folium(m, width=700, height=500)
 
-if __name__ == "__main__":
-    main()
-
-
-
-
-
-
-
+conn.close()
