@@ -2,11 +2,16 @@ import os
 import streamlit as st
 import duckdb
 import folium
+from flask import Flask, render_template
+
+from app import app
 
 from streamlit_folium import st_folium
 
 from loaders import load_from_url, load_local
 
+# Create Flask app instance
+app = Flask(__name__)
 
 conn = duckdb.connect()
 
@@ -44,14 +49,21 @@ st.markdown(
 """
 )
 
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
 m = folium.Map(location=[52.3676, 4.9041], zoom_start=12)
 
 
-for row in nodes:
-    folium.Marker(
-        location=[row[1], row[2]],  # Adjust based on your CSV structure
-        popup=row[0]  # Adjust based on your CSV structure
-    ).add_to(m)
+# for row in nodes:
+#     folium.Marker(
+#         location=[row[1], row[2]],  # Adjust based on your CSV structure
+#         popup=row[0]  # Adjust based on your CSV structure
+#     ).add_to(m)
 
 # Display the map in Streamlit
 st_folium(m, width=700, height=500)
