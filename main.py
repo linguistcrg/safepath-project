@@ -102,6 +102,4 @@ if st.session_state.clicked_points:
         print(point2)
         st.write(f"Latitude point 1: {point1['lat']}, Longitude point 1: {point1['lng']}")
         st.write(f"Latitude point 2: {point2['lat']}, Longitude point 2: {point2['lng']}")
-
-
 conn.close()
