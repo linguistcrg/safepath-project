@@ -1,27 +1,57 @@
+import os
 import streamlit as st
-
-st.set_page_config(
-    page_title="Hello",
-    page_icon="👋",
-)
-
-st.write("# Welcome to Routing! 👋")
+import duckdb
+import folium
 
 
-st.markdown(
-    """
-    Streamlit is an open-source app framework built specifically for
-    Machine Learning and Data Science projects.
-    **👈 Select a demo from the sidebar** to see some examples
-    of what Streamlit can do!
-    ### Want to learn more?
-    - Check out [streamlit.io](https://streamlit.io)
-    - Jump into our [documentation](https://docs.streamlit.io)
-    - Ask a question in our [community
-        forums](https://discuss.streamlit.io)
-    ### See more complex demos
-    - Use a neural net to [analyze the Udacity Self-driving Car Image
-        Dataset](https://github.com/streamlit/demo-self-driving)
-    - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
-"""
-)
+from streamlit_folium import st_folium
+from loaders import load_from_url
+
+
+
+conn = duckdb.connect(database='data.duckdb')
+
+cursor = conn.cursor()
+
+nodes, edges = load_from_url(conn)
+
+conn.close()
+
+
+st.write("Choose one of the options below")
+
+
+m1 = folium.Map(location=[52.3676, 4.9041], zoom_start=12)
+m2 = folium.Map(location=[52.3678, 4.9041], zoom_start=11)
+
+# Add markers to the map
+for row in nodes[:10]:
+    folium.Marker(
+        location=[row[2], row[1]],
+        popup=row[0]
+    ).add_to(m1)
+
+for row in nodes[:10]:
+    folium.Marker(
+        location=[row[2], row[1]],
+        popup=row[0]
+    ).add_to(m2)
+# Create two columns for layout
+col1, col2 = st.columns(2)
+
+# Display the first map in the first column
+with col1:
+    st.header("Route 1")
+    st_folium(m1, width=400, height=400)
+    st.write("Safety rating: ")
+    st.write("Time: ")
+
+# Display the second map in the second column
+with col2:
+    st.header("Route 2")
+    st_folium(m2, width=400, height=400)
+    st.write("Safety rating: ")
+    st.write("Time: ")
+
+if __name__ == "__routing__":
+    routing()

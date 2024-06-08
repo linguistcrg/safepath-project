@@ -1,3 +1,4 @@
+from ast import main
 import os
 import streamlit as st
 import duckdb
@@ -17,12 +18,13 @@ nodes, edges = load_from_url(conn)
 
 conn.close()
 
-st.set_page_config(
-    page_title="Hello",
-    page_icon="👋",
-)
+# st.set_page_config(
+#     page_title="Hello",
+#     page_icon="👋",
+# )
 
 st.write("# Welcome to SafePath!")
+st.write("The calculator of the safest routes  in Amsterdam for women")
 
 col1, col2 = st.columns(2)
 
@@ -33,26 +35,7 @@ with col1:
 with col2:
     user_input2 = st.text_input("End point:")
 
-# st.sidebar.success("The calculator of the safest routes  in Amsterdam for women")
-
-# st.markdown(
-#     """
-#     Streamlit is an open-source app framework built specifically for
-#     Machine Learning and Data Science projects.
-#     **👈 Select a demo from the sidebar** to see some examples
-#     of what Streamlit can do!
-#     ### Want to learn more?
-#     - Check out [streamlit.io](https://streamlit.io)
-#     - Jump into our [documentation](https://docs.streamlit.io)
-#     - Ask a question in our [community
-#         forums](https://discuss.streamlit.io)
-#     ### See more complex demos
-#     - Use a neural net to [analyze the Udacity Self-driving Car Image
-#         Dataset](https://github.com/streamlit/demo-self-driving)
-#     - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
-# """
-# )
-
+st.sidebar.success("The calculator of the safest routes  in Amsterdam for women")
 m = folium.Map(location=[52.3676, 4.9041], zoom_start=12)
 
 
@@ -64,3 +47,18 @@ for row in nodes[:10]:
 
 # Display the map in Streamlit
 st_folium(m, width=700, height=500)
+
+ # Button to navigate to Routing Page
+if st.button("Submit"):
+        st.experimental_set_query_params(page="routing")
+        st.experimental_rerun()
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
+
