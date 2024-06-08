@@ -1,8 +1,12 @@
+<<<<<<< HEAD:main.py
 from ast import main
 import os
+=======
+>>>>>>> fe9d2e9272447cdf985b0c6b41bd3737e21d4911:routing.py
 import streamlit as st
 import duckdb
 import folium
+from folium.plugins import Geocoder
 
 
 from streamlit_folium import st_folium
@@ -31,9 +35,17 @@ with col1:
 
 with col2:
     user_input2 = st.text_input("End point:")
+if 'clicked_points' not in st.session_state:
+    st.session_state.clicked_points = []
 
+<<<<<<< HEAD:main.py
 st.sidebar.success("The calculator of the safest routes  in Amsterdam for women")
+=======
+
+>>>>>>> fe9d2e9272447cdf985b0c6b41bd3737e21d4911:routing.py
 m = folium.Map(location=[52.3676, 4.9041], zoom_start=12)
+Geocoder().add_to(m)
+
 path = shortest_path(conn, nodes[0][0], 4859)
 
 if path is not None:
@@ -61,7 +73,27 @@ if path is not None:
         ).add_to(m)
 
     # Display the map in Streamlit
-    st_folium(m, width=700, height=500)
+m.add_child(folium.LatLngPopup())
 
+map_data = st_folium(m, height=500, width=500)
+if map_data['last_clicked'] is not None:
+    lat = map_data['last_clicked']['lat']
+    lng = map_data['last_clicked']['lng']
+    new_point = {'lat': lat, 'lng': lng}
+    
+    # Append new point to the session state
+    if new_point not in st.session_state.clicked_points:
+        st.session_state.clicked_points.append(new_point)
+
+# Display the clicked points
+if st.session_state.clicked_points:
+    if(len(st.session_state.clicked_points)>=2):
+        st.write("Clicked points:")
+        point1=st.session_state.clicked_points[0]
+        point2=st.session_state.clicked_points[1]
+        print(point1)
+        print(point2)
+        st.write(f"Latitude point 1: {point1['lat']}, Longitude point 1: {point1['lng']}")
+        st.write(f"Latitude point 2: {point2['lat']}, Longitude point 2: {point2['lng']}")
 conn.close()
 
