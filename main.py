@@ -5,10 +5,10 @@ import folium
 
 from streamlit_folium import st_folium
 
-from loaders import load_from_url, load_local
+from loaders import load_from_url, load_local, decode_if_bytes
 
 
-conn = duckdb.connect()
+conn = duckdb.connect(database=':memory:')
 
 cursor = conn.cursor()
 
@@ -47,11 +47,13 @@ st.markdown(
 m = folium.Map(location=[52.3676, 4.9041], zoom_start=12)
 
 
-for row in nodes:
-    folium.Marker(
-        location=[row[1], row[2]],  # Adjust based on your CSV structure
-        popup=row[0]  # Adjust based on your CSV structure
-    ).add_to(m)
+# for row in nodes:
+#     print(row)
+#     print(decode_if_bytes(row["geom"]))
+#     folium.Marker(
+#         location=[row[1], row[2]],  # Adjust based on your CSV structure
+#         popup=row[0]  # Adjust based on your CSV structure
+#     ).add_to(m)
 
 # Display the map in Streamlit
 st_folium(m, width=700, height=500)

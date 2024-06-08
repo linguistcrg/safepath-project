@@ -1,6 +1,10 @@
 import os
 
-import duckdb
+
+def decode_if_bytes(data):
+    if isinstance(data, (bytes, bytearray)):
+        return data.decode('utf-8')
+    return data
 
 
 def load_from_url(conn):
@@ -15,7 +19,8 @@ def load_from_url(conn):
         CREATE TABLE ams_walk_edges AS SELECT * FROM st_read('https://blobs.duckdb.org/ams_walk_edges.geojson');
     """)
 
-    os.mkdir("data")
+    if not os.path.exists("data"):
+        os.mkdir("data")
 
     nodes_df = conn.execute("SELECT * FROM ams_walk_nodes").fetchdf()
     edges_df = conn.execute("SELECT * FROM ams_walk_edges").fetchdf()
@@ -32,6 +37,14 @@ def load_local(conn):
         CREATE TABLE edges AS 
         SELECT * FROM read_csv_auto('data/edges.csv');
     """)
-    nodes = conn.execute("SELECT * FROM nodes").fetchall()
-    edges = conn.execute("SELECT * FROM edges").fetchall()
-    return nodes, edges
+    nodes_raw = conn.execute("SELECT * FROM nodes").fetchall()
+    edges_raw = conn.execute("SELECT * FROM edges").fetchall()
+    nodes = [
+        {
+            'name': row[0],
+            'geom': decode_if_bytes(row[1]),
+        }
+        for row in nodes_raw
+    ]
+
+    return nodes, edges_raw
