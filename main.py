@@ -2,6 +2,7 @@
 import duckdb
 import streamlit as st
 from utils import load_from_url
+
 import routing
 
 # Establish a connection to a DuckDB database
