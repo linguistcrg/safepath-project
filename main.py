@@ -22,9 +22,18 @@ st.set_page_config(
     page_icon="👋",
 )
 
-st.write("# Welcome to SafePath! 👋")
+st.write("# Welcome to SafePath!")
 
-st.sidebar.success("The calculator of the safest routes  in Amsterdam for women")
+col1, col2 = st.columns(2)
+
+# Create two text input fields side by side
+with col1:
+    user_input1 = st.text_input("Starting point:")
+
+with col2:
+    user_input2 = st.text_input("End point:")
+
+# st.sidebar.success("The calculator of the safest routes  in Amsterdam for women")
 
 # st.markdown(
 #     """
