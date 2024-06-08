@@ -1,4 +1,18 @@
+import os
 import streamlit as st
+import duckdb
+
+from loaders import load_from_url, load_local
+
+
+conn = duckdb.connect()
+
+cursor = conn.cursor()
+
+if os.path.exists("data/nodes.csv"):
+    nodes, edges = load_local()
+else:
+    nodes, edges = load_from_url(conn)
 
 st.set_page_config(
     page_title="Hello",
