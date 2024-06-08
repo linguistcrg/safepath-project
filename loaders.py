@@ -1,6 +1,13 @@
 import os
 
-import duckdb
+
+def table_exists(conn, table_name):
+    result = conn.execute(f"""
+    SELECT COUNT(*) 
+    FROM information_schema.tables 
+    WHERE table_name = '{table_name}'
+    """).fetchone()
+    return result[0] > 0
 
 
 def load_from_url(conn):
@@ -10,28 +17,21 @@ def load_from_url(conn):
     conn.install_extension("httpfs")
     conn.load_extension("httpfs")
 
-    conn.execute("""
-        CREATE TABLE ams_walk_nodes AS SELECT * FROM st_read('https://blobs.duckdb.org/ams_walk_nodes.geojson');
-        CREATE TABLE ams_walk_edges AS SELECT * FROM st_read('https://blobs.duckdb.org/ams_walk_edges.geojson');
-    """)
+    if not table_exists(conn, 'ams_walk_nodes'):
 
-    os.mkdir("data")
+        conn.execute("""
+            CREATE TABLE ams_walk_nodes AS SELECT * FROM st_read('https://blobs.duckdb.org/ams_walk_nodes.geojson');
+            CREATE TABLE ams_walk_edges AS SELECT * FROM st_read('https://blobs.duckdb.org/ams_walk_edges.geojson');
+        """)
 
-    nodes_df = conn.execute("SELECT * FROM ams_walk_nodes").fetchdf()
-    edges_df = conn.execute("SELECT * FROM ams_walk_edges").fetchdf()
-    nodes_df.to_csv("data/nodes.csv", index=False)
-    edges_df.to_csv("data/edges.csv", index=False)
+    nodes = conn.execute("""
+    SELECT id, 
+           ST_X(geom) AS longitude, 
+           ST_Y(geom) AS latitude
+           FROM ams_walk_nodes;
+    """).fetchall()
+    edges = conn.execute("SELECT * FROM ams_walk_edges").fetchall()
 
-    return nodes_df, edges_df
-
-
-def load_local(conn):
-    conn.execute(f"""
-        CREATE TABLE nodes AS 
-        SELECT * FROM read_csv_auto('data/nodes.csv');
-        CREATE TABLE edges AS 
-        SELECT * FROM read_csv_auto('data/edges.csv');
-    """)
-    nodes = conn.execute("SELECT * FROM nodes").fetchall()
-    edges = conn.execute("SELECT * FROM edges").fetchall()
     return nodes, edges
+
+
