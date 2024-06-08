@@ -5,7 +5,7 @@ import folium
 
 
 from streamlit_folium import st_folium
-from loaders import load_from_url
+from utils import load_from_url
 
 
 
@@ -18,7 +18,7 @@ nodes, edges = load_from_url(conn)
 conn.close()
 
 
-st.write("Choose one of the options below")
+st.write("# Choose one of the options below")
 
 
 m1 = folium.Map(location=[52.3676, 4.9041], zoom_start=12)
@@ -53,5 +53,3 @@ with col2:
     st.write("Safety rating: ")
     st.write("Time: ")
 
-if __name__ == "__routing__":
-    routing()

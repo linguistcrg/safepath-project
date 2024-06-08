@@ -64,3 +64,4 @@ if path is not None:
     st_folium(m, width=700, height=500)
 
 conn.close()
+
