@@ -47,22 +47,13 @@ with col2:
         destination = find_closest_point(conn, location.longitude, location.latitude)
 
 if source is not None and destination is not None:
-    folium.Marker(
-        location=[source[2], source[1]],
-        popup="Start",
-        tooltip="Start",
-        icon=folium.Icon(color="red")
-    ).add_to(m)
     
-    folium.Marker(
-        location=[destination[2], destination[1]],
-        popup="End",
-        tooltip="End",
-        icon=folium.Icon(color="green")
-    ).add_to(m)
-
     # Calculate the shortest path between source and destination
     path = shortest_path(conn, source[0], destination[0])
+    with col1:
+        st.write("")
+    with col2:
+        st.write("")
 
     if path is not None:
         path_nodes, _ = path
@@ -79,6 +70,20 @@ if source is not None and destination is not None:
                 popup=f"Node {node[0]}",
                 tooltip=f"Node {node[0]}"
             ).add_to(m)
+
+        folium.Marker(
+            location=[source[2], source[1]],
+            popup=f"Start",
+            tooltip=f"{source[0]}",
+            icon=folium.Icon(color="red")
+        ).add_to(m)
+
+        folium.Marker(
+            location=[destination[2], destination[1]],
+            popup=f"End",
+            tooltip=f"{destination[0]}",
+            icon=folium.Icon(color="green")
+        ).add_to(m)
 
         # Add edges as polylines and display feedback averages
         total_safety, total_lighting, total_speed, total_overall, edge_count = 0, 0, 0, 0, 0
