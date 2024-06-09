@@ -179,7 +179,7 @@ def load_from_url(conn):
     return nodes, edges
 
 
-def shortest_path(conn, source_node, destination_node):
+def shortest_path(conn, source_node, destination_node, option):
     # Initialize the priority queue with the source node
     conn.execute("CREATE TEMP TABLE IF NOT EXISTS priority_queue (node_id INTEGER, distance DOUBLE, path VARCHAR);")
     conn.execute("DELETE FROM priority_queue;")  # Clear the priority queue for the new calculation
@@ -217,7 +217,14 @@ def shortest_path(conn, source_node, destination_node):
                 continue  # Skip if the neighbor is already visited
 
             old_distance = conn.execute(f"SELECT distance FROM priority_queue  AS pq WHERE pq.node_id = {neighbor};").fetchone()
-            new_distance = distance + edge_length + danger_score
+            new_distance = distance
+            if option == "Fast":
+                new_distance += edge_length
+            elif option == "Safe":
+                new_distance += danger_score
+            else:
+                new_distance += edge_length + danger_score
+
             if old_distance is None or old_distance[0] > new_distance:
                 new_path = path + '->' + str(neighbor)
                 conn.execute("INSERT INTO priority_queue VALUES (?, ?, ?);", (neighbor, new_distance, new_path))

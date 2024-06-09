@@ -29,6 +29,10 @@ m = folium.Map(location=[52.3676, 4.9041], zoom_start=13)
 Geocoder().add_to(m)
 geolocator = Nominatim(user_agent="SafePath")
 
+option = st.selectbox(
+    "Please specify path type",
+    ("Safe", "Fast", "Both"))
+
 # Initialise source and destination variables
 source, destination = None, None
 
@@ -49,7 +53,7 @@ with col2:
 if source is not None and destination is not None:
     
     # Calculate the shortest path between source and destination
-    path = shortest_path(conn, source[0], destination[0])
+    path = shortest_path(conn, source[0], destination[0], option)
     with col1:
         st.write("")
     with col2:
