@@ -48,15 +48,7 @@ with col2:
     if user_input2:
         location = geolocator.geocode(user_input2)
         destination = find_closest_point(conn, location.longitude, location.latitude)
-# for i in range(0, 100):
-#      folium.Marker(
-#         location=[nodes[i][2], nodes[i][1]],
-#         popup=f"Start",
-#         tooltip=f"Start",
-#         color="blue"
-#     ).add_to(m)
 
-print(source, destination)
 if source is not None and destination is not None:
     
     # Calculate the shortest path between source and destination
@@ -81,11 +73,12 @@ if source is not None and destination is not None:
                 popup=f"Node {node[0]}",
                 tooltip=f"Node {node[0]}"
             ).add_to(m)
+
         folium.Marker(
-        location=[source[2], source[1]],
-        popup=f"Start",
-        tooltip=f"{source[0]}",
-        icon=folium.Icon(color="red")
+            location=[source[2], source[1]],
+            popup=f"Start",
+            tooltip=f"{source[0]}",
+            icon=folium.Icon(color="red")
         ).add_to(m)
 
         folium.Marker(
@@ -95,13 +88,11 @@ if source is not None and destination is not None:
             icon=folium.Icon(color="green")
         ).add_to(m)
 
-
         # Add edges as polylines and display feedback averages
         for i in range(len(nodes_data) - 1):
             nodeid1 = nodes_data[path_nodes[i]][0]
             nodeid2 = nodes_data[path_nodes[i + 1]][0]
-            print(nodeid1)
-            print(nodeid2)
+
             # Query to get the average ratings for the edge between nodeid1 and nodeid2
             feedback_query = f"""
                 SELECT 
