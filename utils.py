@@ -179,7 +179,7 @@ def load_from_url(conn):
     return nodes, edges
 
 
-def shortest_path(conn, source_node, destination_node, option):
+def shortest_path(conn, source_node, destination_node, option="Safe"):
     # Initialize the priority queue with the source node
     conn.execute("CREATE TABLE IF NOT EXISTS shortest_path (u INTEGER, v INTEGER, distance DOUBLE, path VARCHAR, "
                  "type VARCHAR);")
