@@ -1,12 +1,9 @@
-# Import packages
 import streamlit as st
 import duckdb
 import folium
 from folium.plugins import Geocoder
 from geopy.geocoders import Nominatim
-
 from streamlit_folium import st_folium
-
 from utils import load_from_url, shortest_path, find_closest_point, create_feedback_table
 
 # Connect to DuckDB database
@@ -48,23 +45,24 @@ with col2:
     if user_input2:
         location = geolocator.geocode(user_input2)
         destination = find_closest_point(conn, location.longitude, location.latitude)
-# for i in range(0, 100):
-#      folium.Marker(
-#         location=[nodes[i][2], nodes[i][1]],
-#         popup=f"Start",
-#         tooltip=f"Start",
-#         color="blue"
-#     ).add_to(m)
 
-print(source, destination)
 if source is not None and destination is not None:
+    folium.Marker(
+        location=[source[2], source[1]],
+        popup="Start",
+        tooltip="Start",
+        icon=folium.Icon(color="red")
+    ).add_to(m)
     
+    folium.Marker(
+        location=[destination[2], destination[1]],
+        popup="End",
+        tooltip="End",
+        icon=folium.Icon(color="green")
+    ).add_to(m)
+
     # Calculate the shortest path between source and destination
     path = shortest_path(conn, source[0], destination[0])
-    with col1:
-        st.write("")
-    with col2:
-        st.write("")
 
     if path is not None:
         path_nodes, _ = path
@@ -81,27 +79,14 @@ if source is not None and destination is not None:
                 popup=f"Node {node[0]}",
                 tooltip=f"Node {node[0]}"
             ).add_to(m)
-        folium.Marker(
-        location=[source[2], source[1]],
-        popup=f"Start",
-        tooltip=f"{source[0]}",
-        icon=folium.Icon(color="red")
-        ).add_to(m)
-
-        folium.Marker(
-            location=[destination[2], destination[1]],
-            popup=f"End",
-            tooltip=f"{destination[0]}",
-            icon=folium.Icon(color="green")
-        ).add_to(m)
-
 
         # Add edges as polylines and display feedback averages
-        for i in range(len(nodes_data) - 1):
-            nodeid1 = nodes_data[path_nodes[i]][0]
-            nodeid2 = nodes_data[path_nodes[i + 1]][0]
-            print(nodeid1)
-            print(nodeid2)
+        total_safety, total_lighting, total_speed, total_overall, edge_count = 0, 0, 0, 0, 0
+
+        for i in range(len(path_nodes) - 1):
+            nodeid1 = path_nodes[i]
+            nodeid2 = path_nodes[i + 1]
+
             # Query to get the average ratings for the edge between nodeid1 and nodeid2
             feedback_query = f"""
                 SELECT 
@@ -111,8 +96,8 @@ if source is not None and destination is not None:
                     AVG(overall_rating) AS avg_overall
                 FROM feedback
                 WHERE 
-                    NodeOne = {nodeid1} AND NodeTwo = {nodeid2}
-                    OR NodeOne = {nodeid2} AND NodeTwo = {nodeid1};
+                    (nodeOne = {nodeid1} AND nodeTwo = {nodeid2})
+                    OR (nodeOne = {nodeid2} AND nodeTwo = {nodeid1});
             """
 
             feedback_data = conn.execute(feedback_query).fetchone()
@@ -122,6 +107,13 @@ if source is not None and destination is not None:
             avg_lighting = feedback_data[1] if feedback_data[1] is not None else 0.0
             avg_speed = feedback_data[2] if feedback_data[2] is not None else 0.0
             avg_overall = feedback_data[3] if feedback_data[3] is not None else 0.0
+
+            # Sum up the averages for each edge
+            total_safety += avg_safety
+            total_lighting += avg_lighting
+            total_speed += avg_speed
+            total_overall += avg_overall
+            edge_count += 1
 
             # Add polyline with feedback info as popup
             popup_content = f"Safety: {avg_safety:.2f}, Lighting: {avg_lighting:.2f}, Speed: {avg_speed:.2f}, Overall: {avg_overall:.2f}"
@@ -134,11 +126,27 @@ if source is not None and destination is not None:
                 popup=folium.Popup(popup_content, max_width=300)
             ).add_to(m)
 
-        # Display the "Leave Feedback for Route" button
-        if st.button("Leave Feedback for Route"):
-            st.text_area("Please leave your feedback here:")
+        # Calculate the average ratings across the entire path
+        if edge_count > 0:
+            avg_safety = total_safety / edge_count
+            avg_lighting = total_lighting / edge_count
+            avg_speed = total_speed / edge_count
+            avg_overall = total_overall / edge_count
 
-# Display the map in Streamlit
+            st.write("### Average Ratings for the Selected Route")
+            # Define function to create progress bars
+            def create_progress_bar(label, value):
+                bar = f"<progress value='{value * 20}' max='100' style='width: 150px'></progress>"
+                return f"{label}: {bar} {value:.2f}/5.00"
+
+            # Create progress bars for each rating
+            st.markdown(create_progress_bar("Average Safety Rating", avg_safety), unsafe_allow_html=True)
+            st.markdown(create_progress_bar("Average Lighting Rating", avg_lighting), unsafe_allow_html=True)
+            st.markdown(create_progress_bar("Average Speed Rating", avg_speed), unsafe_allow_html=True)
+            st.markdown(create_progress_bar("Average Overall Rating", avg_overall), unsafe_allow_html=True)
+        else:
+            st.write("No feedback data available for this route.")
+
 st_folium(m, width=700, height=500)
 
 # Close the database connection
