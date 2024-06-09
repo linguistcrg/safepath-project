@@ -74,6 +74,7 @@ if source is not None and destination is not None:
         nodes_query = (f"SELECT id, ST_X(geom) AS longitude, ST_Y(geom) AS latitude FROM ams_walk_nodes WHERE id IN "
                        f"({','.join(map(str, path_nodes))})")
         nodes_data = conn.execute(nodes_query).fetchall()
+        nodes_data = {x[0]: x for x in nodes_data}
         
         if st.button("Submit"):
             st.write("Thank you for your feedback!")
@@ -83,9 +84,11 @@ if source is not None and destination is not None:
             st.write(f"Overall experience: {overall_rating}")
             st.write(f"Review: {review}") 
             for i in range(len(nodes_data) - 1):
+                nodeid1 = nodes_data[path_nodes[i]][0]
+                nodeid2 = nodes_data[path_nodes[i + 1]][0]
                 conn.execute(
                     "INSERT INTO feedback (nodeOne, nodeTwo, safety_rating, lighting_rating, speed_rating, overall_rating, review) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    [nodes_data[i][0], nodes_data[i+1][0], safety_rating, lighting_rating, speed_rating, overall_rating, review]
+                    [nodeid1, nodeid2, safety_rating, lighting_rating, speed_rating, overall_rating, review]
                 )
                 
             # Retrieve and display the latest feedback
