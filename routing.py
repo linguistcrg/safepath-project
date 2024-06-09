@@ -49,7 +49,7 @@ with col2:
     if user_input2:
         location = geolocator.geocode(user_input2)
         destination = find_closest_point(conn, location.longitude, location.latitude)
-
+flag=True;
 if source is not None and destination is not None:
     
     # Calculate the shortest path between source and destination
@@ -135,28 +135,27 @@ if source is not None and destination is not None:
                 popup=folium.Popup(popup_content, max_width=300)
             ).add_to(m)
 
+
         # Calculate the average ratings across the entire path
         if edge_count > 0:
-            avg_safety = total_safety / edge_count
-            avg_lighting = total_lighting / edge_count
-            avg_speed = total_speed / edge_count
-            avg_overall = total_overall / edge_count
-
-            st.write("### Average Ratings for the Selected Route")
-            # Define function to create progress bars
-            def create_progress_bar(label, value):
-                bar = f"<progress value='{value * 20}' max='100' style='width: 150px'></progress>"
-                return f"{label}: {bar} {value:.2f}/5.00"
-
-            # Create progress bars for each rating
-            st.markdown(create_progress_bar("Average Safety Rating", avg_safety), unsafe_allow_html=True)
-            st.markdown(create_progress_bar("Average Lighting Rating", avg_lighting), unsafe_allow_html=True)
-            st.markdown(create_progress_bar("Average Speed Rating", avg_speed), unsafe_allow_html=True)
-            st.markdown(create_progress_bar("Average Overall Rating", avg_overall), unsafe_allow_html=True)
+            flag=True
         else:
-            st.write("No feedback data available for this route.")
+            flag=False
 
-st_folium(m, width=700, height=500)
-
-# Close the database connection
+st_folium(m, width=600, height=400)
+if flag is True:
+    avg_safety = total_safety / edge_count
+    avg_lighting = total_lighting / edge_count
+    avg_speed = total_speed / edge_count
+    avg_overall = total_overall / edge_count
+    st.write("### Average Ratings for the Selected Route")
+    def create_progress_bar(label, value):
+        bar = f"<progress value='{value * 20}' max='100' style='width: 150px'></progress>"
+        return f"{label}: {bar} {value:.2f}/5.00"
+    st.markdown(create_progress_bar("Average Safety Rating", avg_safety), unsafe_allow_html=True)
+    st.markdown(create_progress_bar("Average Lighting Rating", avg_lighting), unsafe_allow_html=True)
+    st.markdown(create_progress_bar("Average Speed Rating", avg_speed), unsafe_allow_html=True)
+    st.markdown(create_progress_bar("Average Overall Rating", avg_overall), unsafe_allow_html=True)
+else:
+    st.write("No path found")
 conn.close()
