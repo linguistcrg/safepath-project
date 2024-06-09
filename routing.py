@@ -35,6 +35,7 @@ option = st.selectbox(
 
 # Initialise source and destination variables
 source, destination = None, None
+# conn.execute("DELETE FROM shortest_path;")
 
 # User input for the starting point
 with col1:
@@ -49,7 +50,7 @@ with col2:
     if user_input2:
         location = geolocator.geocode(user_input2)
         destination = find_closest_point(conn, location.longitude, location.latitude)
-flag=True;
+flag = False
 if source is not None and destination is not None:
     
     # Calculate the shortest path between source and destination

@@ -181,6 +181,8 @@ def load_from_url(conn):
 
 def shortest_path(conn, source_node, destination_node, option):
     # Initialize the priority queue with the source node
+    conn.execute("CREATE TABLE IF NOT EXISTS shortest_path (u INTEGER, v INTEGER, distance DOUBLE, path VARCHAR, "
+                 "type VARCHAR);")
     conn.execute("CREATE TEMP TABLE IF NOT EXISTS priority_queue (node_id INTEGER, distance DOUBLE, path VARCHAR);")
     conn.execute("DELETE FROM priority_queue;")  # Clear the priority queue for the new calculation
     conn.execute("INSERT INTO priority_queue VALUES (?, ?, ?)", (source_node, 0, str(source_node)))
@@ -188,6 +190,11 @@ def shortest_path(conn, source_node, destination_node, option):
     # Initialize the visited nodes table
     conn.execute("CREATE TEMP TABLE IF NOT EXISTS visited_nodes (node_id INTEGER PRIMARY KEY, distance DOUBLE);")
     conn.execute("DELETE FROM visited_nodes;")  # Clear the visited nodes table for the new calculation
+
+    cache = conn.execute(f"SELECT * FROM shortest_path WHERE (u = {source_node} AND v = {destination_node} OR "
+                         f"v = {source_node} AND u = {destination_node}) AND type LIKE '{option}';").fetchone()
+    if cache is not None:
+        return [int(x) for x in cache[3].split("->")], cache[2]
 
     while True:
         # Get the node with the smallest distance
@@ -198,6 +205,8 @@ def shortest_path(conn, source_node, destination_node, option):
         node_id, distance, path = current_node
         if node_id == destination_node:
             print(path)
+            conn.execute("INSERT INTO shortest_path VALUES (?, ?, ?, ?, ?);", (source_node, destination_node, distance,
+                                                                               path, option))
             return [int(x) for x in path.split("->")], distance  # Destination reached
 
         # Mark the current node as visited
