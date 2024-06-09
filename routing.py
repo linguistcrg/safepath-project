@@ -11,6 +11,7 @@ from utils import load_from_url, shortest_path, find_closest_point, create_feedb
 
 # Connect to DuckDB database
 conn = duckdb.connect(database='data.duckdb')
+cursor = conn.cursor()
 create_feedback_table(conn)
 
 # Load nodes and edges from the database
@@ -47,23 +48,17 @@ with col2:
     if user_input2:
         location = geolocator.geocode(user_input2)
         destination = find_closest_point(conn, location.longitude, location.latitude)
+# for i in range(0, 100):
+#      folium.Marker(
+#         location=[nodes[i][2], nodes[i][1]],
+#         popup=f"Start",
+#         tooltip=f"Start",
+#         color="blue"
+#     ).add_to(m)
 
 print(source, destination)
 if source is not None and destination is not None:
-    folium.Marker(
-        location=[source[2], source[1]],
-        popup=f"Start",
-        tooltip=f"Start",
-        color="red"
-    ).add_to(m)
-
-    folium.Marker(
-        location=[destination[2], destination[1]],
-        popup=f"End",
-        tooltip=f"End",
-        color="green"
-    ).add_to(m)
-
+    
     # Calculate the shortest path between source and destination
     path = shortest_path(conn, source[0], destination[0])
     with col1:
@@ -76,23 +71,67 @@ if source is not None and destination is not None:
         nodes_query = (f"SELECT id, ST_X(geom) AS longitude, ST_Y(geom) AS latitude FROM ams_walk_nodes WHERE id IN "
                        f"({','.join(map(str, path_nodes))})")
         nodes_data = conn.execute(nodes_query).fetchall()
+        nodes_data = {x[0]: x for x in nodes_data}
 
         # Add nodes as markers
-        for node in nodes_data:
+        for node_id in path_nodes[1:len(nodes_data) - 1]:
+            node = nodes_data[node_id]
             folium.Marker(
                 location=[node[2], node[1]],
                 popup=f"Node {node[0]}",
                 tooltip=f"Node {node[0]}"
             ).add_to(m)
+        folium.Marker(
+        location=[source[2], source[1]],
+        popup=f"Start",
+        tooltip=f"{source[0]}",
+        icon=folium.Icon(color="red")
+        ).add_to(m)
 
-        # Add edges as polylines
+        folium.Marker(
+            location=[destination[2], destination[1]],
+            popup=f"End",
+            tooltip=f"{destination[0]}",
+            icon=folium.Icon(color="green")
+        ).add_to(m)
+
+
+        # Add edges as polylines and display feedback averages
         for i in range(len(nodes_data) - 1):
+            nodeid1 = nodes_data[path_nodes[i]][0]
+            nodeid2 = nodes_data[path_nodes[i + 1]][0]
+            print(nodeid1)
+            print(nodeid2)
+            # Query to get the average ratings for the edge between nodeid1 and nodeid2
+            feedback_query = f"""
+                SELECT 
+                    AVG(safety_rating) AS avg_safety,
+                    AVG(lighting_rating) AS avg_lighting,
+                    AVG(speed_rating) AS avg_speed,
+                    AVG(overall_rating) AS avg_overall
+                FROM feedback
+                WHERE 
+                    NodeOne = {nodeid1} AND NodeTwo = {nodeid2}
+                    OR NodeOne = {nodeid2} AND NodeTwo = {nodeid1};
+            """
+
+            feedback_data = conn.execute(feedback_query).fetchone()
+
+            # Handle None values
+            avg_safety = feedback_data[0] if feedback_data[0] is not None else 0.0
+            avg_lighting = feedback_data[1] if feedback_data[1] is not None else 0.0
+            avg_speed = feedback_data[2] if feedback_data[2] is not None else 0.0
+            avg_overall = feedback_data[3] if feedback_data[3] is not None else 0.0
+
+            # Add polyline with feedback info as popup
+            popup_content = f"Safety: {avg_safety:.2f}, Lighting: {avg_lighting:.2f}, Speed: {avg_speed:.2f}, Overall: {avg_overall:.2f}"
             folium.PolyLine(
                 locations=[
-                    [nodes_data[i][2], nodes_data[i][1]],
-                    [nodes_data[i + 1][2], nodes_data[i + 1][1]]
+                    [nodes_data[path_nodes[i]][2], nodes_data[path_nodes[i]][1]],
+                    [nodes_data[path_nodes[i + 1]][2], nodes_data[path_nodes[i + 1]][1]]
                 ],
-                color="blue"
+                color="blue",
+                popup=folium.Popup(popup_content, max_width=300)
             ).add_to(m)
 
         # Display the "Leave Feedback for Route" button

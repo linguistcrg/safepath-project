@@ -54,6 +54,12 @@ def load_from_url(conn):
             CREATE TABLE ams_walk_nodes AS SELECT * FROM st_read('https://blobs.duckdb.org/ams_walk_nodes.geojson');
             CREATE TABLE ams_walk_edges AS SELECT * FROM st_read('https://blobs.duckdb.org/ams_walk_edges.geojson');
         """)
+        insert_swapped_edges_query = """
+            INSERT INTO ams_walk_edges (v, u, key, highway, name, bridge, tunnel, geom, length)
+            SELECT u, v, key, highway, name, bridge, tunnel, geom, length
+            FROM ams_walk_edges;
+        """
+        conn.execute(insert_swapped_edges_query)
 
     nodes = conn.execute("""
     SELECT id, 
@@ -67,61 +73,43 @@ def load_from_url(conn):
     return nodes, edges
 
 def shortest_path(conn, source_node, destination_node):
-    """
-    Calculate the shortest path between two nodes.
-    
-    :param conn: The database connection object
-    :param source_node: The ID of the source node
-    :param destination_node: The ID of the destination node
-    :return: A tuple containing the path as a list of node IDs and the total distance
-    """
-    # Define the SQL query for calculating the shortest path
-    shortest_path_query = f"""
-    WITH RECURSIVE ShortestPath AS (
-        -- Base case: Initialize with the source node
-        SELECT
-            u AS node_id,
-            CAST(u AS VARCHAR) AS path,
-            0 AS distance
-        FROM
-            ams_walk_edges
-        WHERE
-            u = {source_node}
+    # Initialize the priority queue with the source node
+    conn.execute("CREATE TEMP TABLE IF NOT EXISTS priority_queue (node_id INTEGER, distance DOUBLE, path VARCHAR);")
+    conn.execute("DELETE FROM priority_queue;")  # Clear the priority queue for the new calculation
+    conn.execute("INSERT INTO priority_queue VALUES (?, ?, ?)", (source_node, 0, str(source_node)))
 
-        UNION ALL
+    # Initialize the visited nodes table
+    conn.execute("CREATE TEMP TABLE IF NOT EXISTS visited_nodes (node_id INTEGER PRIMARY KEY, distance DOUBLE);")
+    conn.execute("DELETE FROM visited_nodes;")  # Clear the visited nodes table for the new calculation
 
-        -- Recursive step: Expand the path
-        SELECT
-            ams_walk_edges.v AS node_id,
-            ShortestPath.path || '->' || CAST(ams_walk_edges.v AS VARCHAR) AS path,
-            ShortestPath.distance + ams_walk_edges.length AS distance
-        FROM
-            ShortestPath
-        JOIN
-            ams_walk_edges ON ShortestPath.node_id = ams_walk_edges.u
-        WHERE
-            ams_walk_edges.v <> {source_node}
-    )
-    SELECT
-        path,
-        distance
-    FROM
-        ShortestPath
-    WHERE
-        node_id = {destination_node}
-    ORDER BY
-        distance;
-    """
-    
-    # Execute the query and fetch the result
-    path = conn.execute(shortest_path_query).fetchone()
-    
-    # If a path is found, return the path as a list of node IDs and the total distance
-    if path is not None:
-        return [int(x) for x in path[0].split("->")], path[1]
-    
-    # Return None if no path is found
-    return None
+    while True:
+        # Get the node with the smallest distance
+        current_node = conn.execute("SELECT node_id, distance, path FROM priority_queue ORDER BY distance LIMIT 1;").fetchone()
+        if not current_node:
+            break  # No more nodes to process, end the loop
+
+        node_id, distance, path = current_node
+        if node_id == destination_node:
+            print(path)
+            return [int(x) for x in path.split("->")], distance  # Destination reached
+
+        # Mark the current node as visited
+        conn.execute("INSERT OR IGNORE INTO visited_nodes VALUES (?, ?);", (node_id, distance))
+        conn.execute("DELETE FROM priority_queue WHERE node_id = ?;", (node_id,))
+
+        # Add neighboring nodes to the priority queue
+        neighbors = conn.execute("SELECT v AS neighbor, length FROM ams_walk_edges WHERE u = ? UNION SELECT u AS neighbor, length FROM ams_walk_edges WHERE v = ?;", (node_id, node_id)).fetchall()
+        for neighbor, edge_length in neighbors:
+            if neighbor in [row[0] for row in conn.execute("SELECT node_id FROM visited_nodes;").fetchall()]:
+                continue  # Skip if the neighbor is already visited
+
+            old_distance = conn.execute(f"SELECT distance FROM priority_queue  AS pq WHERE pq.node_id = {neighbor};").fetchone()
+            new_distance = distance + edge_length
+            if old_distance is None or old_distance[0] > new_distance:
+                new_path = path + '->' + str(neighbor)
+                conn.execute("INSERT INTO priority_queue VALUES (?, ?, ?);", (neighbor, new_distance, new_path))
+        
+    return None  # Return None if no path is found
 
 def find_closest_point(conn, longitude, latitude):
     """
