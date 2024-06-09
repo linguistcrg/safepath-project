@@ -7,13 +7,11 @@ from geopy.geocoders import Nominatim
 
 from streamlit_folium import st_folium
 
-from utils import load_from_url, shortest_path, find_closest_point
+from utils import load_from_url, shortest_path, find_closest_point, create_feedback_table
 
 # Connect to DuckDB database
 conn = duckdb.connect(database='data.duckdb')
-
-# Create a cursor object
-cursor = conn.cursor()
+create_feedback_table(conn)
 
 # Load nodes and edges from the database
 nodes, edges = load_from_url(conn)
@@ -29,7 +27,7 @@ st.write("The calculator of the safest routes for women in Amsterdam.")
 col1, col2 = st.columns(2)
 
 # Initialise the Amsterdam map
-m = folium.Map(location=[52.3676, 4.9041], zoom_start=12)
+m = folium.Map(location=[52.3676, 4.9041], zoom_start=13)
 Geocoder().add_to(m)
 geolocator = Nominatim(user_agent="SafePath")
 
@@ -96,6 +94,10 @@ if source is not None and destination is not None:
                 ],
                 color="blue"
             ).add_to(m)
+
+        # Display the "Leave Feedback for Route" button
+        if st.button("Leave Feedback for Route"):
+            st.text_area("Please leave your feedback here:")
 
 # Display the map in Streamlit
 st_folium(m, width=700, height=500)

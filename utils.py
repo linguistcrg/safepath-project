@@ -1,6 +1,4 @@
-# Import module
 import os
-
 def table_exists(conn, table_name):
     """
     Check if a table exists in the database.
@@ -9,15 +7,34 @@ def table_exists(conn, table_name):
     :param table_name: The name of the table to check
     :return: True if the table exists, False otherwise
     """
-    # Execute an SQL query to count the number of tables with the given name
     result = conn.execute(f"""
     SELECT COUNT(*) 
     FROM information_schema.tables 
     WHERE table_name = '{table_name}'
     """).fetchone()
     
-    # Return True if the count is greater than 0
     return result[0] > 0
+
+def create_feedback_table(conn):
+    """
+    Create the feedback table if it does not exist.
+    
+    :param conn: The database connection object
+    """
+    if not table_exists(conn, 'feedback'):
+        conn.execute("""
+        CREATE SEQUENCE feedback_id_seq START 1;
+        CREATE TABLE feedback (
+            id INTEGER DEFAULT NEXTVAL('feedback_id_seq') PRIMARY KEY,
+            nodeOne DOUBLE,
+            nodeTwo DOUBLE,
+            safety_rating INTEGER,
+            lighting_rating INTEGER,
+            speed_rating INTEGER,
+            overall_rating INTEGER,
+            review TEXT
+        );
+        """)
 
 def load_from_url(conn):
     """
@@ -26,30 +43,18 @@ def load_from_url(conn):
     :param conn: The database connection object
     :return: A tuple containing nodes and edges
     """
-    # Install and load the spatial extension
     conn.install_extension("spatial")
     conn.load_extension("spatial")
 
-    # Install and load the httpfs extension
     conn.install_extension("httpfs")
     conn.load_extension("httpfs")
 
-    # Check if the table 'ams_walk_nodes' does not exist
     if not table_exists(conn, 'ams_walk_nodes'):
-        # Create tables by reading data from the given URLs
         conn.execute("""
             CREATE TABLE ams_walk_nodes AS SELECT * FROM st_read('https://blobs.duckdb.org/ams_walk_nodes.geojson');
             CREATE TABLE ams_walk_edges AS SELECT * FROM st_read('https://blobs.duckdb.org/ams_walk_edges.geojson');
         """)
 
-        # insert_swapped_edges_query = """
-        #     INSERT INTO ams_walk_edges (v, u, key, highway, name, bridge, tunnel, geom, length)
-        #     SELECT u, v, key, highway, name, bridge, tunnel, geom, length
-        #     FROM ams_walk_edges;
-        # """
-        # conn.execute(insert_swapped_edges_query)
-
-    # Retrieve node data with longitude and latitude
     nodes = conn.execute("""
     SELECT id, 
            ST_X(geom) AS longitude, 
@@ -57,10 +62,8 @@ def load_from_url(conn):
            FROM ams_walk_nodes;
     """).fetchall()
 
-    # Retrieve all edge data
     edges = conn.execute("SELECT * FROM ams_walk_edges").fetchall()
 
-    # Return the nodes and edges
     return nodes, edges
 
 def shortest_path(conn, source_node, destination_node):
@@ -83,7 +86,7 @@ def shortest_path(conn, source_node, destination_node):
         FROM
             ams_walk_edges
         WHERE
-            u = {source_node} -- Replace with the source node ID
+            u = {source_node}
 
         UNION ALL
 
