@@ -93,8 +93,10 @@ if source is not None and destination is not None:
                 
             # Retrieve and display the latest feedback
             feedback_data = conn.execute("SELECT * FROM feedback ORDER BY id DESC LIMIT 1").fetchall()
-            st.write("Latest Feedback Entry:")
-            st.write(feedback_data)
+            # st.write("Latest Feedback Entry:")
+            st.write("Thank you for the feedback")
+
+            # st.write(feedback_data)
 
 conn.close()
 
